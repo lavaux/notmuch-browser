@@ -1,0 +1,10 @@
+node_modules/
+.venv/
+dist/
+__pycache__/
+*.egg-info/
+.pytest_cache/
+src/notmuch_browser/static/
+shots/
+# 21 MB launcher binary shipped with the impeccable skill, fetched on first run
+.claude/skills/impeccable/scripts/bin/

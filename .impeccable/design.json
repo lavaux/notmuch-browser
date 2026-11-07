@@ -1,0 +1,313 @@
+{
+  "schemaVersion": 2,
+  "generatedAt": "2026-11-06T00:00:00Z",
+  "title": "Design System: Notmuch Browser",
+  "extensions": {
+    "colorMeta": {
+      "primary": {
+        "role": "primary",
+        "displayName": "Mail Blue",
+        "canonical": "#1b57c7",
+        "dark": "#8fb8ff",
+        "tonalRamp": [
+          "#0d1626",
+          "#12306f",
+          "#1b57c7",
+          "#4a7fdb",
+          "#8fb8ff",
+          "#b9d2ff",
+          "#e1eafa",
+          "#f1f5fd"
+        ]
+      },
+      "primary-ink": {
+        "role": "primary",
+        "displayName": "Accent Ink",
+        "canonical": "#ffffff",
+        "dark": "#0d1626"
+      },
+      "primary-soft": {
+        "role": "primary",
+        "displayName": "Blue Wash",
+        "canonical": "#e1eafa",
+        "dark": "#22334f"
+      },
+      "canvas": {
+        "role": "neutral",
+        "displayName": "Canvas Grey",
+        "canonical": "#f3f5f8",
+        "dark": "#12151a",
+        "tonalRamp": [
+          "#12151a",
+          "#181c22",
+          "#212630",
+          "#444c5a",
+          "#5d6574",
+          "#bcc4d0",
+          "#dde2ea",
+          "#f3f5f8"
+        ]
+      },
+      "surface": {
+        "role": "neutral",
+        "displayName": "Pane White",
+        "canonical": "#ffffff",
+        "dark": "#181c22"
+      },
+      "hover": {
+        "role": "neutral",
+        "displayName": "Hover Grey",
+        "canonical": "#e9edf3",
+        "dark": "#212630"
+      },
+      "hairline": {
+        "role": "neutral",
+        "displayName": "Hairline",
+        "canonical": "#dde2ea",
+        "dark": "#2a303a"
+      },
+      "hairline-strong": {
+        "role": "neutral",
+        "displayName": "Strong Hairline",
+        "canonical": "#bcc4d0",
+        "dark": "#444c5a"
+      },
+      "text": {
+        "role": "neutral",
+        "displayName": "Ink",
+        "canonical": "#1a1d24",
+        "dark": "#e8ebf1"
+      },
+      "text-secondary": {
+        "role": "neutral",
+        "displayName": "Ink Secondary",
+        "canonical": "#444b59",
+        "dark": "#bcc3d0"
+      },
+      "text-tertiary": {
+        "role": "neutral",
+        "displayName": "Ink Tertiary",
+        "canonical": "#5d6574",
+        "dark": "#959eae"
+      },
+      "flag-amber": {
+        "role": "tertiary",
+        "displayName": "Flag Amber",
+        "canonical": "#94500a",
+        "dark": "#f2b866"
+      },
+      "danger": {
+        "role": "tertiary",
+        "displayName": "Alert Red",
+        "canonical": "#b3261e",
+        "dark": "#ff9a92"
+      },
+      "danger-soft": {
+        "role": "tertiary",
+        "displayName": "Alert Red Wash",
+        "canonical": "#fdecea",
+        "dark": "#3b1e1c"
+      },
+      "warn": {
+        "role": "tertiary",
+        "displayName": "Busy Amber",
+        "canonical": "#6b4300",
+        "dark": "#f6d58f"
+      },
+      "warn-soft": {
+        "role": "tertiary",
+        "displayName": "Busy Amber Wash",
+        "canonical": "#fff1cf",
+        "dark": "#3b2e12"
+      },
+      "toast": {
+        "role": "neutral",
+        "displayName": "Toast Ink Surface",
+        "canonical": "#262a33",
+        "dark": "#e8ebf1"
+      },
+      "flag-soft": {
+        "role": "tertiary",
+        "displayName": "Flag Wash",
+        "canonical": "#fdf0dc",
+        "dark": "#35280f"
+      },
+      "unread-wash": {
+        "role": "neutral",
+        "displayName": "Unread Wash",
+        "canonical": "#f0f5ff",
+        "dark": "#1b2638"
+      },
+      "highlight": {
+        "role": "tertiary",
+        "displayName": "Search Highlight",
+        "canonical": "#ffe58a",
+        "dark": "#5a4a0a"
+      }
+    },
+    "typographyMeta": {
+      "title": {
+        "displayName": "Title",
+        "purpose": "Thread subject in the reader."
+      },
+      "headline": {
+        "displayName": "Headline",
+        "purpose": "Product name and state titles."
+      },
+      "body": {
+        "displayName": "Body",
+        "purpose": "Message text, max 76ch."
+      },
+      "ui": {
+        "displayName": "UI",
+        "purpose": "Base size for rows, buttons, rail."
+      },
+      "label": {
+        "displayName": "Label",
+        "purpose": "Dates, counts, addresses, chips, notes."
+      },
+      "mono": {
+        "displayName": "Mono",
+        "purpose": "Query echo, syntax examples, keycaps."
+      }
+    },
+    "shadows": [
+      {
+        "name": "float",
+        "value": "0 6px 24px rgba(20, 28, 45, 0.16), 0 1px 3px rgba(20, 28, 45, 0.12)",
+        "purpose": "Toast, syntax popover and mobile rail drawer only. Dark: 0 6px 24px rgba(0,0,0,0.5), 0 1px 3px rgba(0,0,0,0.4)."
+      }
+    ],
+    "motion": [
+      {
+        "name": "ease-out",
+        "value": "cubic-bezier(0.19, 1, 0.22, 1)",
+        "purpose": "Rail drawer slide (160ms) and toast rise (180ms). Reduced motion collapses all durations."
+      }
+    ],
+    "breakpoints": [
+      {
+        "name": "drawer",
+        "value": "1099px",
+        "purpose": "Max width where the rail becomes a drawer and the list narrows to 380px."
+      },
+      {
+        "name": "one-pane",
+        "value": "719px",
+        "purpose": "Max width where one pane shows at a time."
+      }
+    ]
+  },
+  "components": [
+    {
+      "name": "Button",
+      "kind": "custom",
+      "refersTo": "button",
+      "description": "Default outlined 32px control; pressed state marks an active toggle.",
+      "html": "<button class=\"ds-btn\">Taller</button> <button class=\"ds-btn\" aria-pressed=\"true\">Unread</button>",
+      "css": ".ds-btn { display: inline-flex; align-items: center; gap: 8px; height: 32px; padding: 0 12px; background: var(--surface, #fff); border: 1px solid var(--line-strong, #bcc4d0); border-radius: 6px; color: var(--text, #1a1d24); font: inherit; } .ds-btn:hover { background: var(--hover, #e9edf3); } .ds-btn[aria-pressed=\"true\"] { background: var(--accent-soft, #e1eafa); border-color: var(--accent, #1b57c7); color: var(--accent, #1b57c7); font-weight: 600; } .ds-btn:focus-visible { outline: 2px solid var(--accent, #1b57c7); outline-offset: 1px; }"
+    },
+    {
+      "name": "Search Field",
+      "kind": "input",
+      "refersTo": "search-field",
+      "description": "The hero control: 40px field that takes a 2px accent outline on focus.",
+      "html": "<div class=\"ds-search\"><input class=\"ds-search-input\" type=\"search\" placeholder=\"Search mail\"></div>",
+      "css": ".ds-search { display: flex; align-items: center; height: 40px; max-width: 760px; padding: 0 4px 0 12px; background: var(--surface, #fff); border: 1px solid var(--line-strong, #bcc4d0); border-radius: 8px; color: var(--text-3, #5d6574); } .ds-search:focus-within { outline: 2px solid var(--accent, #1b57c7); border-color: var(--accent, #1b57c7); } .ds-search-input { flex: 1; min-width: 0; height: 100%; background: transparent; border: 0; outline: none; color: var(--text, #1a1d24); font: inherit; font-size: 0.906rem; }"
+    },
+    {
+      "name": "Rail Item",
+      "kind": "nav",
+      "refersTo": "rail-item",
+      "description": "32px tag rail row with a count; active is blue wash with weight 600.",
+      "html": "<a class=\"ds-rail\" href=\"#\"><span></span><span>Inbox</span><span class=\"ds-count\">12</span></a><a class=\"ds-rail is-active\" href=\"#\"><span></span><span>Unread</span><span class=\"ds-count\">3</span></a>",
+      "css": ".ds-rail { display: grid; grid-template-columns: 18px minmax(0, 1fr) auto; align-items: center; gap: 12px; height: 32px; padding: 0 12px; border-radius: 6px; color: var(--text-2, #444b59); text-decoration: none; } .ds-rail:hover { background: var(--hover, #e9edf3); color: var(--text, #1a1d24); } .ds-rail.is-active { background: var(--selected, #e1eafa); color: var(--accent, #1b57c7); font-weight: 600; } .ds-count { font-size: 0.78rem; font-weight: 400; color: var(--text-3, #5d6574); } .ds-rail.is-active .ds-count { color: var(--accent, #1b57c7); }"
+    },
+    {
+      "name": "Thread Row",
+      "kind": "custom",
+      "refersTo": "thread-row",
+      "description": "Two-line row: sender, count and relative date over subject and marks. Unread is weight 600 with a filled dot.",
+      "html": "<div class=\"ds-thread is-unread\"><span class=\"ds-marker\"></span><div class=\"ds-line\"><span class=\"ds-from\">Ada Lovelace</span><span class=\"ds-date\">Yesterday</span></div><div class=\"ds-line\"><span class=\"ds-subject\">Engine notes, draft 3</span></div></div>",
+      "css": ".ds-thread { display: grid; grid-template-columns: 8px minmax(0, 1fr); column-gap: 10px; row-gap: 1px; padding: 8px 16px 8px 12px; border-bottom: 1px solid var(--line, #dde2ea); color: var(--text-2, #444b59); } .ds-thread:hover { background: var(--hover, #e9edf3); } .ds-marker { grid-row: 1 / span 2; align-self: center; width: 8px; height: 8px; border-radius: 50%; } .ds-thread.is-unread .ds-marker { background: var(--accent, #1b57c7); } .ds-line { display: flex; align-items: baseline; gap: 8px; min-width: 0; } .ds-from { flex: 1; min-width: 0; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; color: var(--text, #1a1d24); } .ds-subject { flex: 1; min-width: 0; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; } .ds-date { font-size: 0.78rem; color: var(--text-3, #5d6574); white-space: nowrap; } .ds-thread.is-unread .ds-from, .ds-thread.is-unread .ds-subject { font-weight: 600; } .ds-thread.is-unread .ds-subject { color: var(--text, #1a1d24); } .ds-thread.is-unread .ds-date { color: var(--text-2, #444b59); font-weight: 600; }"
+    },
+    {
+      "name": "Tag Chip",
+      "kind": "chip",
+      "refersTo": "tag-chip",
+      "description": "26px pill with a circular remove button.",
+      "html": "<span class=\"ds-chip\"><a class=\"ds-chip-name\" href=\"#\">project</a><button class=\"ds-chip-x\" aria-label=\"Remove\">x</button></span>",
+      "css": ".ds-chip { display: inline-flex; align-items: center; height: 26px; padding-left: 10px; border: 1px solid var(--line-strong, #bcc4d0); border-radius: 13px; font-size: 0.78rem; } .ds-chip-name { color: var(--text, #1a1d24); text-decoration: none; } .ds-chip-name:hover { color: var(--accent, #1b57c7); text-decoration: underline; } .ds-chip-x { display: inline-grid; place-items: center; width: 24px; height: 24px; margin-left: 2px; padding: 0; background: transparent; border: 0; border-radius: 50%; color: var(--text-3, #5d6574); } .ds-chip-x:hover { background: var(--hover, #e9edf3); color: var(--danger, #b3261e); }"
+    },
+    {
+      "name": "Toast",
+      "kind": "custom",
+      "refersTo": "toast",
+      "description": "The one inverted floating surface, with an Undo action.",
+      "html": "<div class=\"ds-toast\"><span class=\"ds-toast-text\">Tag removed</span><button class=\"ds-toast-action\">Undo</button></div>",
+      "css": ".ds-toast { display: flex; align-items: center; gap: 8px; max-width: 560px; padding: 6px 6px 6px 16px; background: var(--toast-bg, #262a33); border-radius: 8px; box-shadow: 0 6px 24px rgba(20, 28, 45, 0.16), 0 1px 3px rgba(20, 28, 45, 0.12); color: var(--toast-text, #f1f3f7); } .ds-toast-text { flex: 1; padding: 6px 0; } .ds-toast-action { height: 32px; padding: 0 12px; background: transparent; border: 0; border-radius: 6px; color: var(--toast-link, #a9c7ff); font: inherit; font-weight: 600; } .ds-toast-action:hover { background: rgba(127, 127, 127, 0.18); } .ds-toast-action:focus-visible { outline: 2px solid currentColor; outline-offset: 1px; }"
+    }
+  ],
+  "narrative": {
+    "northStar": "The Standard Webmail, Played Straight",
+    "overview": "This is the category standard executed exactly: a Gmail-like three-pane browser (tag rail, thread list with search, thread reader) in neutral greys tinted a few degrees toward one blue accent. It is an Operate surface for a researcher who searches a very large archive with notmuch syntax and mostly reads old mail. There is no costume and no smuggled quirk. What the build offers is execution: an exact grid, a real type scale, tabular numerals everywhere, and honest states.\n\nState is carried by weight, marker and shape. Colour is one blue accent plus the meaning colours (red for errors, amber for the busy-database warning and for the flag mark). Structure comes from 1px hairlines and tonal steps between canvas and surface, never from gradients, cards-as-structure or decorative colour. Light and dark are both first class and share every role name.",
+    "keyCharacteristics": [
+      "Search is the hero control: a 40px field, up to 760px wide, left-aligned with the list column.",
+      "Two-line thread rows: sender, thread size and relative date on line one; subject and marks on line two.",
+      "Unread is weight 600 plus a filled 8px accent dot. Read rows are regular weight with no dot.",
+      "System UI sans, tabular numerals on the body, a 6-step size scale from 0.78rem to 1.25rem.",
+      "Flat at rest. Shadow appears only on floating layers.",
+      "Inline authored SVG icons, one 1.5px stroke."
+    ],
+    "rules": [
+      {
+        "name": "The One Accent Rule",
+        "body": "Blue is the only chromatic colour outside the meaning colours. A new surface may not add a second hue for decoration.",
+        "section": "colors"
+      },
+      {
+        "name": "The Meaning Colour Rule",
+        "body": "Amber and red appear only where they report state: a flag the user set, a busy database, an error. Never as ornament or category colour.",
+        "section": "colors"
+      },
+      {
+        "name": "The Theme Resolution Rule",
+        "body": "boot.js writes the resolved theme to the root data-theme attribute before first paint. Components read only the custom properties and never branch on the theme. The prefers-color-scheme block in tokens.css is a no-script fallback.",
+        "section": "colors"
+      },
+      {
+        "name": "The Tabular Rule",
+        "body": "Tabular numerals are set on the body and inherited everywhere. Do not switch them off for dates or counts.",
+        "section": "typography"
+      },
+      {
+        "name": "The Weight Is State Rule",
+        "body": "Weight 600 means unread, selected or active, or a heading. Do not use it for emphasis elsewhere, and do not use uppercase or letter-spaced labels.",
+        "section": "typography"
+      },
+      {
+        "name": "The Flat-By-Default Rule",
+        "body": "Panes, rows, chips and buttons carry no shadow. A shadow means the layer floats over content and will go away.",
+        "section": "elevation"
+      }
+    ],
+    "dos": [
+      "Do take every colour from the custom properties in tokens.css and give each new role a light and a dark value.",
+      "Do carry state with weight 600, the 8px dot and the pill or ring shapes before reaching for colour.",
+      "Do keep controls at 32px (36px icon buttons, 40px search) and 6px radius, panes at 8px.",
+      "Do set dates and counts in tabular numerals at the label size in tertiary ink.",
+      "Do use the 2px accent focus outline everywhere and keep every control keyboard operable.",
+      "Do author icons inline as SVG with a single 1.5px stroke.",
+      "Do write all prose, UI copy and docs without em dashes. Use a colon or a second sentence."
+    ],
+    "donts": [
+      "Don't add a second accent hue, gradients, or decorative colour.",
+      "Don't put a shadow on anything that does not float over content.",
+      "Don't use cards as structure; panes and hairlines carry it.",
+      "Don't use amber or red for anything but the flag, the busy state and errors.",
+      "Don't put text lighter than the tertiary ink on any surface.",
+      "Don't load external fonts or hosts, or use emoji or glyph icons.",
+      "Don't auto-size the HTML mail frame."
+    ]
+  }
+}

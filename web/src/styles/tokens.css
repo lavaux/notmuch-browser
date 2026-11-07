@@ -1,0 +1,161 @@
+/* Design tokens. Light is the default. The dark values apply when the system prefers dark
+   and no manual choice is stored, or when data-theme="dark" is set. boot.js always writes
+   the resolved data-theme before first paint, so the media block is the no-script fallback. */
+
+:root,
+:root[data-theme="light"] {
+  color-scheme: light;
+  --bg: #f3f5f8;
+  --surface: #ffffff;
+  --hover: #e9edf3;
+  --selected: #e1eafa;
+  --line: #dde2ea;
+  --line-strong: #bcc4d0;
+  --text: #1a1d24;
+  --text-2: #444b59;
+  --text-3: #5d6574;
+  --accent: #1b57c7;
+  --accent-ink: #ffffff;
+  --accent-soft: #e1eafa;
+  --flag: #94500a;
+  --danger: #b3261e;
+  --danger-soft: #fdecea;
+  --warn: #6b4300;
+  --warn-soft: #fff1cf;
+  --unread-bg: #f0f5ff;
+  --flag-soft: #fdf0dc;
+  --mark: #ffe58a;
+  --mark-ink: #1a1d24;
+  --hue-bg: 0.95 0.035;
+  --hue-fg: 0.38 0.1;
+  --hue-line: 0.82 0.06;
+  --hue-dot: 0.56 0.13;
+  --hue-avatar: 0.9 0.07;
+  --toast-bg: #262a33;
+  --toast-text: #f1f3f7;
+  --toast-link: #a9c7ff;
+  --shadow: 0 6px 24px rgba(20, 28, 45, 0.16), 0 1px 3px rgba(20, 28, 45, 0.12);
+}
+
+@media (prefers-color-scheme: dark) {
+  :root:not([data-theme]) {
+    color-scheme: dark;
+    --bg: #12151a;
+    --surface: #181c22;
+    --hover: #212630;
+    --selected: #22334f;
+    --line: #2a303a;
+    --line-strong: #444c5a;
+    --text: #e8ebf1;
+    --text-2: #bcc3d0;
+    --text-3: #959eae;
+    --accent: #8fb8ff;
+    --accent-ink: #0d1626;
+    --accent-soft: #22334f;
+    --flag: #f2b866;
+    --danger: #ff9a92;
+    --danger-soft: #3b1e1c;
+    --warn: #f6d58f;
+    --warn-soft: #3b2e12;
+  --unread-bg: #1b2638;
+  --flag-soft: #35280f;
+  --mark: #5a4a0a;
+  --mark-ink: #f6f1d9;
+  --hue-bg: 0.31 0.05;
+  --hue-fg: 0.86 0.08;
+  --hue-line: 0.46 0.07;
+  --hue-dot: 0.76 0.12;
+  --hue-avatar: 0.38 0.08;
+    --toast-bg: #e8ebf1;
+    --toast-text: #181c22;
+    --toast-link: #1b57c7;
+    --shadow: 0 6px 24px rgba(0, 0, 0, 0.5), 0 1px 3px rgba(0, 0, 0, 0.4);
+  }
+}
+
+:root[data-theme="dark"] {
+  color-scheme: dark;
+  --bg: #12151a;
+  --surface: #181c22;
+  --hover: #212630;
+  --selected: #22334f;
+  --line: #2a303a;
+  --line-strong: #444c5a;
+  --text: #e8ebf1;
+  --text-2: #bcc3d0;
+  --text-3: #959eae;
+  --accent: #8fb8ff;
+  --accent-ink: #0d1626;
+  --accent-soft: #22334f;
+  --flag: #f2b866;
+  --danger: #ff9a92;
+  --danger-soft: #3b1e1c;
+  --warn: #f6d58f;
+  --warn-soft: #3b2e12;
+  --unread-bg: #1b2638;
+  --flag-soft: #35280f;
+  --mark: #5a4a0a;
+  --mark-ink: #f6f1d9;
+  --hue-bg: 0.31 0.05;
+  --hue-fg: 0.86 0.08;
+  --hue-line: 0.46 0.07;
+  --hue-dot: 0.76 0.12;
+  --hue-avatar: 0.38 0.08;
+  --toast-bg: #e8ebf1;
+  --toast-text: #181c22;
+  --toast-link: #1b57c7;
+  --shadow: 0 6px 24px rgba(0, 0, 0, 0.5), 0 1px 3px rgba(0, 0, 0, 0.4);
+}
+
+:root {
+  --font: system-ui, -apple-system, "Segoe UI", Roboto, "Helvetica Neue", Arial, sans-serif;
+  --mono: ui-monospace, SFMono-Regular, Menlo, Consolas, "Liberation Mono", monospace;
+  --fs-sm: 0.78rem;
+  --fs-base: 0.875rem;
+  --fs-body: 0.906rem;
+  --fs-lg: 1rem;
+  --fs-xl: 1.25rem;
+  --radius: 6px;
+  --topbar-h: 56px;
+  --rail-w: 232px;
+  --list-w: 420px;
+  --ease-out: cubic-bezier(0.19, 1, 0.22, 1);
+}
+
+/* Category hues for tags and senders. Five hues, none in the red to yellow arc that means error,
+   busy and flag, and none on the blue accent. Roles are lightness and chroma per theme above. */
+[data-hue] {
+  --c-bg: oklch(var(--hue-bg) var(--hue));
+  --c-fg: oklch(var(--hue-fg) var(--hue));
+  --c-line: oklch(var(--hue-line) var(--hue));
+  --c-dot: oklch(var(--hue-dot) var(--hue));
+  --c-avatar: oklch(var(--hue-avatar) var(--hue));
+}
+
+[data-hue="0"] { --hue: 190; }
+[data-hue="1"] { --hue: 145; }
+[data-hue="2"] { --hue: 225; }
+[data-hue="3"] { --hue: 300; }
+[data-hue="4"] { --hue: 345; }
+
+/* Fixed tones for the tags that mean something. */
+[data-tone="accent"] {
+  --c-bg: var(--accent-soft);
+  --c-fg: var(--accent);
+  --c-line: color-mix(in oklch, var(--accent) 40%, var(--surface));
+  --c-dot: var(--accent);
+}
+
+[data-tone="flag"] {
+  --c-bg: var(--flag-soft);
+  --c-fg: var(--flag);
+  --c-line: color-mix(in oklch, var(--flag) 40%, var(--surface));
+  --c-dot: var(--flag);
+}
+
+[data-tone="quiet"] {
+  --c-bg: var(--bg);
+  --c-fg: var(--text-2);
+  --c-line: var(--line-strong);
+  --c-dot: var(--text-3);
+}

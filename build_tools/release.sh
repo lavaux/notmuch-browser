@@ -4,7 +4,7 @@
 #
 # Managed by releaser — do not edit in place. Local changes are detected on
 # `releaser upgrade`, which will show a diff and ask before replacing this file.
-# releaser-template-version: 1.1.0-pre.2
+# releaser-template-version: 1.1.0-pre.3
 set -euo pipefail
 
 # ── colours ──────────────────────────────────────────────────────────────────
@@ -997,6 +997,88 @@ _regen_and_commit() {
   return 0
 }
 
+# _add_trigger_commit <release_branch> <full_version> <return_branch>
+# Check out the line, bring it level with origin, and put the empty trigger commit
+# on it. A stale local branch would get the commit and its push would then be
+# rejected as non-fast-forward with the commit left behind, so a diverged line
+# stops here and <return_branch> is checked out again before dying.
+_add_trigger_commit() {
+  local branch="$1" v="$2" back="$3"
+  git checkout --quiet "$branch"
+  if git show-ref --verify --quiet "refs/remotes/origin/${branch}" \
+     && ! git merge --ff-only --quiet "origin/${branch}" 2>/dev/null; then
+    git checkout --quiet "$back"
+    die "${branch} has diverged from origin/${branch}. Reconcile it, then try again."
+  fi
+  git commit --allow-empty -m "${MSG_TRIGGER}${v}"
+}
+
+# ── cmd: graduate ────────────────────────────────────────────────────────────
+# Force the graduation of release/X.Y to X.Y.0 by pushing an empty trigger commit.
+# cut does the same when it finds a half-finished graduation, but only from main;
+# this works from the release branch itself, or for a line named on the command
+# line. It never creates the branch (that is cut's job) and refuses a line that
+# is already graduated: an empty commit is not releasable, so CI would publish
+# nothing and the next patch needs a real fix commit.
+cmd_graduate() {
+  header "Force Graduation"
+  rule
+
+  require_clean_tree
+
+  local start line
+  start=$(current_branch)
+  line="${1:-$start}"
+  line="${line#release/}"
+  [[ "$line" =~ ^([0-9]+)\.([0-9]+)$ ]] || \
+    die "Not on a release branch (on '${start}'). Run it from release/X.Y, or name the line: ${BOLD}${SELF} graduate X.Y${RESET}"
+
+  local release_branch="release/${line}"
+  local full_version="${line}.0"
+  local next_minor_ver
+  next_minor_ver=$(next_minor "$full_version")
+
+  git fetch --quiet origin "+refs/heads/${release_branch}:refs/remotes/origin/${release_branch}" 2>/dev/null \
+    || warn "Could not fetch ${release_branch} from origin. Deciding from the refs already fetched."
+  branch_exists "$release_branch" || \
+    die "Branch ${release_branch} does not exist. Create it from main with ${BOLD}${SELF} cut${RESET}."
+
+  local r
+  while IFS= read -r r; do
+    if _release_commit_on "$r" "$full_version"; then
+      success "${full_version} is already fully released."
+      info "An empty commit publishes nothing. Patch releases need a ${BOLD}fix${RESET} commit: ${BOLD}${SELF} switch${RESET}"
+      echo
+      return
+    fi
+  done < <(_line_refs "$release_branch")
+
+  printf "  %-28s %s\n" "Line:"                 "${CYAN}${release_branch}${RESET}"
+  printf "  %-28s %s\n" "CI will graduate to:"  "${GREEN}${full_version}${RESET}"
+  printf "  %-28s %s\n" "Commit to add:"        "${DIM}${MSG_TRIGGER}${full_version} (empty)${RESET}"
+  rule
+  ask_yes "Add the trigger commit and push ${release_branch}?" || { info "Aborted, nothing changed."; return; }
+  echo
+
+  _add_trigger_commit "$release_branch" "$full_version" "$start"
+  if git push -u origin "$release_branch"; then
+    success "Pushed ${release_branch}. CI will graduate to ${GREEN}${full_version}${RESET}"
+    echo
+    [[ "$start" == "$release_branch" ]] || git checkout --quiet "$start"
+    if _wait_for_graduation "$release_branch" "$full_version"; then
+      if latest_full_release_not_in_ancestry >/dev/null; then
+        echo
+        info "Now run ${BOLD}${SELF} finalize${RESET} on main so it advances to ${YELLOW}${next_minor_ver}-pre.1${RESET}."
+      fi
+    fi
+  else
+    [[ "$start" == "$release_branch" ]] || git checkout --quiet "$start"
+    warn "The push failed. The trigger commit is on ${release_branch}; push it when ready:"
+    echo -e "  ${BOLD}git push -u origin ${release_branch}${RESET}"
+  fi
+  echo
+}
+
 cmd_cut() {
   header "Cut Release Branch"
   rule
@@ -1064,16 +1146,7 @@ cmd_cut() {
     echo -e "   • CI ran but failed before ${DIM}@semantic-release/git${RESET} could write back\n"
     read -rp "  Add a trigger commit and push to retry? [Y/n] " fix_it
     if ! [[ "$fix_it" =~ ^[Nn]$ ]]; then
-      git checkout "$release_branch"
-      # A stale local branch would get the trigger commit, and then its push
-      # would be rejected as non-fast-forward with the commit left behind.
-      if git show-ref --verify --quiet "refs/remotes/origin/${release_branch}" \
-         && ! git merge --ff-only --quiet "origin/${release_branch}" 2>/dev/null; then
-        git checkout --quiet main
-        die "${release_branch} has diverged from origin/${release_branch}. Reconcile it, then run cut again."
-      fi
-      git commit --allow-empty \
-        -m "${MSG_TRIGGER}${full_version}"
+      _add_trigger_commit "$release_branch" "$full_version" main
       _cut_push_and_return "$release_branch" "$full_version" "$next_minor_ver"
     else
       info "Aborted. Push a non-[skip ci] commit to ${release_branch} when ready."
@@ -1842,7 +1915,7 @@ cmd_help() {
   echo -e "  Usage: ${BOLD}${SELF} <command>${RESET}"
   echo
   local -a _cmds _descs
-  _cmds=(bootstrap finalize sync branches status commit major cut release switch backport help)
+  _cmds=(bootstrap finalize sync branches status commit major cut graduate release switch backport help)
   _descs=(
     "${BOLD}One-time setup${RESET}: create initial release/X.Y branch so CI works"
     "After CI graduates X.Y.0, merge it back so main advances"
@@ -1852,6 +1925,7 @@ cmd_help() {
     "Create a conventional commit interactively"
     "Create a ${RED}BREAKING CHANGE${RESET} commit to force a MAJOR version bump"
     "Cut a release/X.Y branch from main → CI produces X.Y.0"
+    "Force X.Y.0 on an existing release/X.Y with an empty trigger commit"
     "Run semantic-release locally (no CI needed)"
     "Switch to an existing release/X.Y branch for patch work"
     "Copy chosen commits from main onto release/X.Y lines (cherry-pick -x)"
@@ -1911,6 +1985,7 @@ case "${1:-help}" in
   commit)       cmd_commit    ;;
   major)        cmd_major     ;;
   cut)          cmd_cut       ;;
+  graduate)     shift; cmd_graduate "$@" ;;
   release|publish) cmd_release ;;
   switch)       cmd_switch    ;;
   backport)     shift; cmd_backport "$@" ;;

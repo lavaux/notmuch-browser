@@ -1,6 +1,6 @@
 {
   "_comment": "Managed by releaser. Commit this file. Run `releaser upgrade` to refresh the release tooling.",
-  "releaser_version": "1.1.0-pre.3",
+  "releaser_version": "1.1.0-pre.4",
   "forge": "github",
   "forge_url": "https://git.aquila-consortium.org",
   "secret_name": "GITHUB_TOKEN",
@@ -9,8 +9,8 @@
   "version_hook": true,
   "managed": {
     ".releaserc.json": {
-      "sha256": "17ed08c372fca33f5780d8817dfc042f7f30101b5649b52e2a332ef1d46040bc",
-      "plugins_sha256": "5b7d1ff40b44cbf95e14297f59aa48c324369cdfdcfe9dce775f27edf25ee0cd"
+      "sha256": "abc6c3e09243f09bca69d6ceea635c301a41bdae42954e034ed42f76c8e5e60f",
+      "plugins_sha256": "b63fa59c62445574db2b5aec6f83fe61d104077d5635844f8b5905e5da3dd6a1"
     },
     ".github/workflows/release.yml": {
       "sha256": "e9be8058b8ab1146ba5887360dec5ae181ced277505fdfcdd10c728b035ade69"
@@ -19,7 +19,7 @@
       "sha256": "eed696fa9e50cd2a5869b6f6422584c6fd4c2afc5cfb4247e9ae491c0e7eb0d8"
     },
     "build_tools/release.sh": {
-      "sha256": "6cd282eb0c8266b69174bd2e1497ab67e149d93928366ba9aa9e3dcdb06a652c"
+      "sha256": "46a361fc5a10607bfb2b0c1ba0b0b3faa448d649847c2275836cacc2be2e6d33"
     }
   },
   "project_owned": [

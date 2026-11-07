@@ -4,7 +4,7 @@
 #
 # Managed by releaser — do not edit in place. Local changes are detected on
 # `releaser upgrade`, which will show a diff and ask before replacing this file.
-# releaser-template-version: 1.1.0-pre.3
+# releaser-template-version: 1.1.0-pre.4
 set -euo pipefail
 
 # ── colours ──────────────────────────────────────────────────────────────────
@@ -324,7 +324,7 @@ cmd_status() {
           info "cut waits for CI, then offers ${BOLD}${SELF} finalize${RESET} so main advances to ${YELLOW}${major}.$((minor + 1)).0-pre.1${RESET}."
         fi
       elif [[ "$version" =~ ^([0-9]+)\.([0-9]+)\.([0-9]+)$ ]]; then
-        info "No pre-release yet. Push a ${BOLD}feat${RESET} or ${BOLD}fix${RESET} commit to trigger one."
+        info "No pre-release yet. Push a ${BOLD}feat${RESET} or ${BOLD}fix${RESET} commit to trigger one, or force it with ${BOLD}${SELF} graduate${RESET}."
       fi
       ;;
     release/*)
@@ -894,8 +894,12 @@ _cut_push_and_return() {
 # tagged and then abandoned, the tag is on origin before this run even starts.
 # @semantic-release/git pushes the release commit before semantic-release
 # pushes the tag, so a new tag on an unmoved head means CI failed in between.
+#
+# Optional <verb> (default "graduate") words the status line, and a fourth
+# argument of 1 applies the RELEASE_WAIT_SECONDS cap on a terminal as well, for a
+# caller that waits on a version it only predicted.
 _wait_for_graduation() {
-  local branch="$1" v="$2"
+  local branch="$1" v="$2" verb="${3:-graduate}" cap_tty="${4:-0}"
   local tag="v${v}" interval="${RELEASE_POLL_SECONDS:-15}" max="${RELEASE_WAIT_SECONDS:-1800}"
   [[ "$interval" =~ ^[1-9][0-9]*$ ]] || interval=15
   [[ "$max" =~ ^[1-9][0-9]*$ ]] || max=1800
@@ -907,7 +911,7 @@ _wait_for_graduation() {
   pushed=$(git rev-parse "refs/heads/${branch}")
   git ls-remote --exit-code --tags origin "refs/tags/${tag}" >/dev/null 2>&1 && tag_was_there=1
 
-  echo -e "  ⏳ Waiting for CI to graduate ${GREEN}${v}${RESET} on ${CYAN}${branch}${RESET}…"
+  echo -e "  ⏳ Waiting for CI to ${verb} ${GREEN}${v}${RESET} on ${CYAN}${branch}${RESET}…"
   if (( tty )); then
     echo -e "     ${DIM}checking origin every ${interval}s · any key = check now · q = stop waiting${RESET}"
   fi
@@ -937,7 +941,8 @@ _wait_for_graduation() {
       warned=1
     fi
 
-    if (( ! tty && SECONDS - start >= max )); then
+    if (( (! tty || cap_tty) && SECONDS - start >= max )); then
+      (( tty )) && echo
       info "Stopped waiting after ${max}s. CI keeps running on ${branch}."
       return 1
     fi
@@ -1014,12 +1019,16 @@ _add_trigger_commit() {
 }
 
 # ── cmd: graduate ────────────────────────────────────────────────────────────
-# Force the graduation of release/X.Y to X.Y.0 by pushing an empty trigger commit.
-# cut does the same when it finds a half-finished graduation, but only from main;
-# this works from the release branch itself, or for a line named on the command
-# line. It never creates the branch (that is cut's job) and refuses a line that
-# is already graduated: an empty commit is not releasable, so CI would publish
-# nothing and the next patch needs a real fix commit.
+# Force a release with an empty commit. Two cases, told apart by the branch:
+#
+#   release/X.Y   graduate that line to X.Y.0. cut does the same when it finds a
+#                 half-finished graduation, but only from main; this works from
+#                 the release branch itself, or for a line named on the command
+#                 line. It never creates the branch (that is cut's job) and
+#                 refuses a line that is already graduated: an empty commit is
+#                 not releasable, so CI would publish nothing and the next patch
+#                 needs a real fix commit.
+#   main          publish the next pre-release, see _graduate_main.
 cmd_graduate() {
   header "Force Graduation"
   rule
@@ -1028,10 +1037,14 @@ cmd_graduate() {
 
   local start line
   start=$(current_branch)
+  if [[ "${1:-}" == "main" || ( -z "${1:-}" && "$start" == "main" ) ]]; then
+    _graduate_main
+    return
+  fi
   line="${1:-$start}"
   line="${line#release/}"
   [[ "$line" =~ ^([0-9]+)\.([0-9]+)$ ]] || \
-    die "Not on a release branch (on '${start}'). Run it from release/X.Y, or name the line: ${BOLD}${SELF} graduate X.Y${RESET}"
+    die "Not on a release branch (on '${start}'). Run it from release/X.Y or main, or name the line: ${BOLD}${SELF} graduate X.Y${RESET}"
 
   local release_branch="release/${line}"
   local full_version="${line}.0"
@@ -1075,6 +1088,113 @@ cmd_graduate() {
     [[ "$start" == "$release_branch" ]] || git checkout --quiet "$start"
     warn "The push failed. The trigger commit is on ${release_branch}; push it when ready:"
     echo -e "  ${BOLD}git push -u origin ${release_branch}${RESET}"
+  fi
+  echo
+}
+
+# _next_pre_release: print the version the next pre-release on main will carry,
+# or nothing when it cannot be told (no stable tag in main's history yet).
+#
+# semantic-release numbers a pre-release from the last stable tag plus the highest
+# bump since. The trigger commit is a minor, so: if the minor after the last
+# stable tag is above the version main is on, the cycle moves to it and starts at
+# pre.1 (right after finalize, or when a fix-only cycle X.Y.Z is bumped). If not,
+# main is already on that minor or higher, and the counter simply goes up.
+_next_pre_release() {
+  local version base n last nm top
+  version=$(current_version)
+  [[ "$version" =~ ^([0-9]+\.[0-9]+\.[0-9]+)(-pre\.([0-9]+))?$ ]] || return 0
+  base="${BASH_REMATCH[1]}"
+  n="${BASH_REMATCH[3]:-0}"
+  last=$(git tag --merged HEAD --list 'v[0-9]*.[0-9]*.[0-9]*' 2>/dev/null \
+           | sed 's/^v//' | grep -Ev -- '-' | sort -V | tail -1 || true)
+  [[ -n "$last" ]] || return 0
+  nm=$(next_minor "$last")
+  top=$(printf '%s\n%s\n' "$base" "$nm" | sort -V | tail -1)
+  if [[ "$top" == "$nm" && "$base" != "$nm" ]]; then
+    echo "${nm}-pre.1"
+  else
+    echo "${base}-pre.$((n + 1))"
+  fi
+}
+
+# _graduate_main: publish the next pre-release by pushing an empty
+# chore(pre-release) commit on main. Nothing else releases without a feat or fix,
+# so after finalize, or after a run of docs and chore commits, main would sit
+# still. The commit is invisible in the CHANGELOG, and the template's
+# releaseRules turn it into a minor bump.
+_graduate_main() {
+  local start
+  start=$(current_branch)
+  [[ "$start" == "main" ]] || die "Run this from main (you are on '${start}')."
+
+  git fetch --quiet origin "+refs/heads/main:refs/remotes/origin/main" 2>/dev/null \
+    || warn "Could not fetch main from origin. Deciding from the refs already fetched."
+  if git show-ref --verify --quiet refs/remotes/origin/main \
+     && ! git merge-base --is-ancestor refs/remotes/origin/main HEAD; then
+    die "main is behind or has diverged from origin/main. Pull it first, then try again."
+  fi
+
+  # Older deployments predate the rule, and a project may have changed it: either
+  # way the commit would be pushed and publish nothing, or the wrong version.
+  # python3, like the rest of this script; jq is not required of a project.
+  local rule_rc=0
+  RELEASERC_PATH="$RELEASERC" python3 - <<'PY' || rule_rc=$?
+import json, os, sys
+try:
+    with open(os.environ["RELEASERC_PATH"]) as f:
+        plugins = json.load(f).get("plugins", [])
+except (OSError, ValueError):
+    sys.exit(2)
+rules = [r for p in plugins if isinstance(p, list) and "commit-analyzer" in str(p[0])
+         for r in (p[1].get("releaseRules", []) if len(p) > 1 and isinstance(p[1], dict) else [])
+         if r.get("type") == "chore" and r.get("scope") == "pre-release"]
+if not rules:
+    sys.exit(3)
+sys.exit(0 if all(r.get("release") in ("minor", "major") for r in rules) else 4)
+PY
+  case "$rule_rc" in
+    0) ;;
+    2) die "Cannot read ${RELEASERC} as JSON." ;;
+    3) die "${RELEASERC} has no release rule for chore(pre-release) commits, so the trigger would publish nothing.\n  Run releaser upgrade, commit the result, then try again." ;;
+    *) die "The chore(pre-release) rule in ${RELEASERC} does not release a minor.\n  After finalize it would publish the wrong version or none. Set \"release\": \"minor\", or run releaser upgrade." ;;
+  esac
+
+  if latest_full_release_not_in_ancestry >/dev/null; then
+    die "A graduated release is not in main's history yet, so main would keep producing pre-releases of the old version.\n  Run ${BOLD}${SELF} finalize${RESET} first."
+  fi
+
+  local version expected
+  version=$(current_version)
+  expected=$(_next_pre_release)
+  [[ -n "$expected" ]] || \
+    die "Cannot tell which version CI would publish: no stable vX.Y.Z tag is reachable from main.\n  Fetch the tags (${BOLD}git fetch --tags${RESET}) and try again. A shallow clone hides them."
+
+  printf "  %-28s %s\n" "Current version:"   "${YELLOW}${version}${RESET}"
+  printf "  %-28s %s\n" "Next pre-release:"  "${YELLOW}${expected}${RESET}"
+  printf "  %-28s %s\n" "Commit to add:"     "${DIM}${MSG_PRE_TRIGGER}${expected} (empty)${RESET}"
+  # A fix-only cycle X.Y.Z (Z > 0) is only a patch line; the trigger is a minor.
+  if [[ "$version" =~ ^[0-9]+\.[0-9]+\.([0-9]+)-pre\. ]] \
+     && (( BASH_REMATCH[1] > 0 )) && [[ "$expected" != "${version%-pre.*}-pre."* ]]; then
+    warn "main is on a patch cycle (${version}); the trigger is a minor, so it moves to ${expected}."
+  fi
+  rule
+  ask_yes "Add the trigger commit and push main?" || { info "Aborted, nothing changed."; return; }
+  echo
+
+  git commit --allow-empty -m "${MSG_PRE_TRIGGER}${expected}"
+  # Explicit remote and ref: a bare `git push` follows the upstream and push.default,
+  # which may be somewhere else, or nothing.
+  if git push origin main; then
+    success "Pushed main. CI will publish ${YELLOW}${expected}${RESET}"
+    echo
+    # The version is predicted, not read, so the wait is capped even on a terminal.
+    if _wait_for_graduation main "$expected" publish 1; then
+      info "CI wrote the release commit to origin/main. Run ${BOLD}git pull${RESET} to receive it."
+    fi
+  else
+    warn "The push failed. The trigger commit is on main; push it when ready:"
+    echo -e "  ${BOLD}git push origin main${RESET}"
   fi
   echo
 }
@@ -1267,13 +1387,14 @@ readonly MSG_ADVANCE="chore: advance main past "
 readonly MSG_SYNC="ci: sync workflow files"
 readonly MSG_REGEN="ci: regenerate semantic-release branches"
 readonly MSG_TRIGGER="chore: trigger CI to graduate to "
+readonly MSG_PRE_TRIGGER="chore(pre-release): trigger "
 
 # _is_release_machinery <subject>: true for the subjects that release tooling
 # writes, never a developer. Copying one onto a line would overwrite its
 # VERSION.txt, CHANGELOG.md or .releaserc.json with another line's.
 _is_release_machinery() {
   local p
-  for p in "$MSG_RELEASE" "$MSG_ADD_WORKFLOWS" "$MSG_ADVANCE" "$MSG_SYNC" "$MSG_REGEN" "$MSG_TRIGGER"; do
+  for p in "$MSG_RELEASE" "$MSG_ADD_WORKFLOWS" "$MSG_ADVANCE" "$MSG_SYNC" "$MSG_REGEN" "$MSG_TRIGGER" "$MSG_PRE_TRIGGER"; do
     [[ "$1" == "$p"* ]] && return 0
   done
   [[ "$1" == "$MSG_REGISTER"*"$MSG_REGISTER_TAIL"* ]]
@@ -1925,7 +2046,7 @@ cmd_help() {
     "Create a conventional commit interactively"
     "Create a ${RED}BREAKING CHANGE${RESET} commit to force a MAJOR version bump"
     "Cut a release/X.Y branch from main → CI produces X.Y.0"
-    "Force X.Y.0 on an existing release/X.Y with an empty trigger commit"
+    "Force X.Y.0 (on release/X.Y) or the next pre-release (on main) with an empty commit"
     "Run semantic-release locally (no CI needed)"
     "Switch to an existing release/X.Y branch for patch work"
     "Copy chosen commits from main onto release/X.Y lines (cherry-pick -x)"

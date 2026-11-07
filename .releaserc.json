@@ -21,6 +21,11 @@
             "release": "major"
           },
           {
+            "type": "chore",
+            "scope": "pre-release",
+            "release": "minor"
+          },
+          {
             "type": "docs",
             "scope": "README",
             "release": "patch"

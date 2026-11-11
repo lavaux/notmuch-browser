@@ -4,7 +4,7 @@ build-backend = "hatchling.build"
 
 [project]
 name = "notmuch-browser"
-version = "0.2.0rc1"
+version = "0.2.0rc2"
 description = "A small local web UI to browse and tag a notmuch mail database"
 readme = "README.md"
 requires-python = ">=3.11"

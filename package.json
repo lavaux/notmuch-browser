@@ -1,7 +1,7 @@
 {
   "name": "notmuch-browser-web",
   "private": true,
-  "version": "0.2.0-pre.1",
+  "version": "0.2.0-pre.2",
   "description": "Frontend sources of notmuch-browser, bundled into the Python package",
   "scripts": {
     "build": "webpack --mode production",

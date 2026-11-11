@@ -8,6 +8,7 @@ from notmuch_browser.notmuch import (
     BadQuery,
     DatabaseBusy,
     NotFound,
+    decode_output,
     iter_messages,
     message_query,
     quote_term,
@@ -167,3 +168,28 @@ async def test_database_busy_when_locked(nm, corpus):
     await nm.apply_tag_changes('id:"plain1@test"', ["flagged"], [])
     assert "flagged" in corpus.tags_of("plain1@test")
     assert os.path.exists(corpus.config)
+
+
+# ------------------------------------------------------ non-UTF-8 output
+
+
+@pytest.mark.parametrize(
+    "raw, text",
+    [
+        ("Café “ok”".encode(), "Café “ok”"),
+        (b"caf\xe9", "café"),
+        (b"\xe2\x80", "\u00e2\u20ac"),
+        (b"\x81\x93ok\x94", "\x81“ok”"),
+        (b"\xe2\x80\x9c ok \xe9", "“ ok é"),
+    ],
+)
+def test_decode_output_falls_back_per_byte(raw, text):
+    assert decode_output(raw) == text
+
+
+async def test_show_thread_with_raw_8bit_body(nm, raw8bit):
+    data = await nm.show_thread(raw8bit)
+    (msg,) = iter_messages(data)
+    parts = msg["body"][0]["content"]
+    plain = next(p for p in parts if p["content-type"] == "text/plain")
+    assert "Café “cité”" in plain["content"]

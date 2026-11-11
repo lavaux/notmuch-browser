@@ -138,6 +138,15 @@ async def test_thread_endpoint(client, corpus):
     assert "/tmp" not in str(data)
 
 
+async def test_thread_with_raw_8bit_body(client, raw8bit):
+    resp = await client.get(f"/api/thread/{raw8bit}")
+    assert resp.status == 200
+    assert "Café" in str(await resp.json())
+    html = await client.get("/api/message/raw8bit@test/html")
+    assert html.status == 200
+    assert "Café" in await html.text()
+
+
 async def test_thread_id_is_validated(client):
     assert (await client.get("/api/thread/not-hex!")).status == 400
     assert (await client.get("/api/thread/deadbeef")).status == 404

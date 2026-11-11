@@ -8,6 +8,7 @@ are validated before they reach an argument list or a batch line.
 from __future__ import annotations
 
 import asyncio
+import codecs
 import json
 import os
 import re
@@ -23,6 +24,37 @@ WRITE_TIMEOUT = 15.0
 TAG_RE = re.compile(r"^[A-Za-z0-9_][A-Za-z0-9_.@:/=-]{0,63}$")
 THREAD_RE = re.compile(r"^[0-9a-f]{1,32}$")
 _CONTROL_RE = re.compile(r"[\x00-\x1f\x7f]")
+
+# Bytes Windows-1252 leaves undefined. They decode as Latin-1 instead.
+_CP1252_HOLES = frozenset({0x81, 0x8D, 0x8F, 0x90, 0x9D})
+
+
+def _legacy_fallback(exc: UnicodeError) -> tuple[str, int]:
+    if not isinstance(exc, UnicodeDecodeError):
+        raise exc
+    bad = exc.object[exc.start : exc.end]
+    text = "".join(
+        chr(b) if b in _CP1252_HOLES else bytes([b]).decode("cp1252") for b in bad
+    )
+    return text, exc.end
+
+
+codecs.register_error("notmuch-browser-legacy", _legacy_fallback)
+
+
+def decode_output(data: bytes) -> str:
+    """Decode notmuch output as UTF-8, reading stray bytes as Windows-1252.
+
+    notmuch copies a text part through unconverted when it declares no charset
+    (or one notmuch cannot convert), so its JSON can hold raw legacy bytes. Such
+    bytes are all >= 0x80 and therefore sit inside JSON strings, never in the
+    structure. Valid UTF-8 is unchanged.
+
+    Known limit: a Message-ID holding non-UTF-8 bytes decodes to Windows-1252
+    text and no longer matches when sent back as `id:"..."`, so the routes that
+    look that message up again return 404.
+    """
+    return data.decode("utf-8", "notmuch-browser-legacy")
 
 
 class NotmuchError(Exception):
@@ -123,8 +155,8 @@ class Notmuch:
     async def _json(self, *args: str, timeout: float | None = None):
         out = await self._run(*args, timeout=timeout)
         try:
-            return json.loads(out) if out.strip() else []
-        except json.JSONDecodeError as exc:
+            return json.loads(decode_output(out)) if out.strip() else []
+        except (json.JSONDecodeError, UnicodeDecodeError) as exc:
             raise NotmuchError(f"unexpected notmuch output: {exc}") from exc
 
     # ---------------------------------------------------------------- version

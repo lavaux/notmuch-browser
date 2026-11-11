@@ -158,3 +158,38 @@ def corpus(tmp_path: Path) -> Corpus:
 @pytest.fixture
 def nm(corpus: Corpus) -> Notmuch:
     return Notmuch(config=str(corpus.config), write_timeout=3.0)
+
+
+# A multipart message whose text parts declare no charset and carry raw Latin-1
+# and Windows-1252 bytes. notmuch passes such bodies through unconverted, so its
+# JSON output is not valid UTF-8. Kept out of `build_messages()` so the corpus
+# counts stay fixed.
+RAW_8BIT = (
+    b"From: Sender <alice@example.org>\r\n"
+    b"To: Guilhem <me@example.org>\r\n"
+    b"Subject: Raw 8bit body\r\n"
+    b"Message-ID: <raw8bit@test>\r\n"
+    b"Date: Thu, 01 Jan 2026 12:00:00 +0000\r\n"
+    b"MIME-Version: 1.0\r\n"
+    b'Content-Type: multipart/alternative; boundary="b8"\r\n'
+    b"\r\n"
+    b"--b8\r\n"
+    b"Content-Type: text/plain\r\n"
+    b"Content-Transfer-Encoding: 8bit\r\n"
+    b"\r\n"
+    b"Caf\xe9 \x93cit\xe9\x94\r\n"
+    b"--b8\r\n"
+    b"Content-Type: text/html\r\n"
+    b"Content-Transfer-Encoding: 8bit\r\n"
+    b"\r\n"
+    b"<p>Caf\xe9</p>\r\n"
+    b"--b8--\r\n"
+)
+
+
+@pytest.fixture
+def raw8bit(corpus: Corpus) -> str:
+    """Add the RAW_8BIT message as read mail and return its thread id."""
+    (corpus.mail / "cur" / "1800000000.raw8bit.test:2,S").write_bytes(RAW_8BIT)
+    corpus.cli("new")
+    return corpus.thread_of("raw8bit@test")
